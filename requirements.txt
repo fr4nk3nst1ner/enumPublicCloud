@@ -1,0 +1,15 @@
+boto3
+google-cloud-storage
+google-cloud-compute
+google-cloud-container
+google-cloud-artifact-registry
+azure-identity==1.13.0
+azure-storage-blob==12.17.0
+azure-mgmt-resource==22.0.0
+azure-mgmt-storage==21.2.0
+azure-mgmt-compute==29.1.0
+azure-mgmt-network==23.1.0
+azure-mgmt-containerregistry==10.1.0
+azure-mgmt-containerservice==21.1.0
+azure-keyvault-secrets==4.6.0
+requests==2.31.0
