@@ -3,7 +3,7 @@ name: Docker Build and Push
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*' # Run on any tag that starts with 'v'
 
 jobs:
   docker:

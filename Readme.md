@@ -1,4 +1,4 @@
-# enumPublicCloud
+# CloudSnitch
 
 A tool for enumerating publicly accessible or cross-account shared cloud resources across AWS, GCP, and Azure cloud platforms.
 
@@ -39,8 +39,8 @@ A tool for enumerating publicly accessible or cross-account shared cloud resourc
 ## Installation
 
 ```bash
-git clone https://github.com/fr4nk3nst1ner/enumPublicCloud.git
-cd enumPublicCloud
+git clone https://github.com/fr4nk3nst1ner/CloudSnitch.git
+cd CloudSnitch
 go build
 ```
 
@@ -48,7 +48,7 @@ go build
 
 Basic syntax:
 ```bash
-go run enumPublicCloud.go -platform PLATFORM [flags] RESOURCE_TYPE
+go run CloudSnitch.go -platform PLATFORM [flags] RESOURCE_TYPE
 ```
 
 Common flags:
@@ -61,7 +61,7 @@ Common flags:
 
 To see example usage and supported resource types:
 ```bash
-go run enumPublicCloud.go -examples
+go run CloudSnitch.go -examples
 ```
 
 ### AWS Usage
@@ -76,16 +76,16 @@ AWS-specific flags:
 Example commands:
 ```bash
 # List public AMIs in your account
-go run enumPublicCloud.go -platform aws -profile myprofile ami
+go run CloudSnitch.go -platform aws -profile myprofile ami
 
 # List public EBS snapshots in specific account
-go run enumPublicCloud.go -platform aws -profile myprofile -aws-account 123456789012 ebs
+go run CloudSnitch.go -platform aws -profile myprofile -aws-account 123456789012 ebs
 
 # List public ECR repositories from multiple accounts
-go run enumPublicCloud.go -platform aws -profile myprofile -accounts-file accounts.txt ecr
+go run CloudSnitch.go -platform aws -profile myprofile -accounts-file accounts.txt ecr
 
 # List all public resources in an account
-go run enumPublicCloud.go -platform aws -profile myprofile -aws-account 123456789012 all
+go run CloudSnitch.go -platform aws -profile myprofile -aws-account 123456789012 all
 ```
 
 Supported AWS resource types:
@@ -106,16 +106,16 @@ GCP-specific flags:
 Example commands:
 ```bash
 # Enumerate public storage buckets
-go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID storage
+go run CloudSnitch.go -platform gcp -target-project TARGET_PROJECT_ID storage
 
 # Enumerate public compute resources
-go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID compute
+go run CloudSnitch.go -platform gcp -target-project TARGET_PROJECT_ID compute
 
 # Enumerate public BigQuery datasets
-go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID bigquery
+go run CloudSnitch.go -platform gcp -target-project TARGET_PROJECT_ID bigquery
 
 # Enumerate all public resources
-go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID all
+go run CloudSnitch.go -platform gcp -target-project TARGET_PROJECT_ID all
 ```
 
 Supported GCP resource types:
@@ -145,13 +145,13 @@ Azure-specific flags:
 Example commands (preview):
 ```bash
 # List public storage accounts
-go run enumPublicCloud.go -platform azure -subscription SUB_ID storage
+go run CloudSnitch.go -platform azure -subscription SUB_ID storage
 
 # List public VMs
-go run enumPublicCloud.go -platform azure -subscription SUB_ID vm
+go run CloudSnitch.go -platform azure -subscription SUB_ID vm
 
 # List all public resources
-go run enumPublicCloud.go -platform azure -subscription SUB_ID all
+go run CloudSnitch.go -platform azure -subscription SUB_ID all
 ```
 
 Planned Azure resource types:
