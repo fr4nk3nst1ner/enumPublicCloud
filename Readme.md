@@ -1,171 +1,236 @@
-# Cloud Resource Enumerator
+# enumPublicCloud
 
-Tool to help identify and audit public-facing resources across multiple cloud providers.
+A tool for enumerating publicly accessible or cross-account shared cloud resources across AWS, GCP, and Azure cloud platforms.
 
-### Supported Resources
+## Features
 
-#### AWS
-- Amazon Machine Images (AMIs)
-- EBS Snapshots
-- ECR Repositories
+- Multi-cloud resource enumeration:
+  - AWS resources (S3 buckets, EC2 instances, ECR repositories, public AMIs, public EBS snapshots)
+  - GCP resources (Storage buckets, Compute Engine resources, BigQuery datasets, and more)
+  - Azure resources (coming soon)
+- Identifies resources that are:
+  - Publicly accessible
+  - Shared across accounts/projects
+  - Potentially misconfigured
+- Detailed resource information including:
+  - Resource type and name
+  - Creation time and location
+  - Access policies and permissions
+  - Resource-specific properties
+  - Tags and labels
+- User-friendly error handling with clear messages
+- Multiple output formats (text, JSON, CSV)
 
-#### GCP
-- Storage Buckets
-- Compute Instances
-- GKE Clusters
-- Artifact Registry
+## Prerequisites
 
-#### Azure
-- Storage Accounts
-- Virtual Machines
-- Container Registries
-- AKS Clusters
-- Network Interfaces
-- Public IP Addresses
+- Go 1.19 or later
+- For AWS:
+  - AWS CLI configured with credentials
+  - AWS profile with necessary permissions
+  - Target account ID(s) for cross-account enumeration
+- For GCP:
+  - `gcloud` CLI tool installed and configured
+  - Active gcloud configuration with necessary permissions
+  - Target project ID for cross-project enumeration
+- For Azure (coming soon):
+  - Azure CLI configured with credentials
+  - Subscription ID with necessary permissions
 
 ## Installation
 
-1. Clone the repository:
-
 ```bash
 git clone https://github.com/fr4nk3nst1ner/enumPublicCloud.git
-cd cloud-resource-enumerator
-```
-
-2. Install required dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Configure cloud provider credentials:
-
-### AWS Configuration
-- Configure AWS credentials using `aws configure --profile <profile-name>`
-- Create an accounts file containing AWS account IDs (one per line)
-
-### GCP Configuration
-- Set up application default credentials:
-
-```bash
-gcloud auth application-default login
-```
-
-### Azure Configuration
-- Log in to Azure CLI:
-
-```bash
-az login
+cd enumPublicCloud
+go build
 ```
 
 ## Usage
 
-The tool uses a command-line interface with subcommands for each cloud provider.
-
-### General Syntax
+Basic syntax:
 ```bash
-python3 enumPublicCloud.py <platform> [options]
+go run enumPublicCloud.go -platform PLATFORM [flags] RESOURCE_TYPE
 ```
 
-### Common Options (All Platforms)
-- `--log-level`: Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-- `--log-file`: Specify a file for logging output
-- `--output-format`: Choose output format (text, json, csv)
-- `--output-file`: Specify output file path
-
-### AWS Examples
-
-1. Enumerate public AMIs:
-
-```bash
-python3 enumPublicCloud.py aws ami --profile myprofile --accounts-file accounts.txt
+Common flags:
+```
+-platform        Cloud platform to enumerate (aws/gcp/azure)
+-output-format   Output format (text/json/csv)
+-output-file     File to write output to
+-examples        Show example usage
 ```
 
-2. Check public EBS snapshots in a specific region:
-
+To see example usage and supported resource types:
 ```bash
-python3 enumPublicCloud.py aws ebs --profile myprofile --accounts-file accounts.txt --region us-east-1
+go run enumPublicCloud.go -examples
 ```
 
-3. List public ECR repositories:
+### AWS Usage
 
-```bash
-python3 enumPublicCloud.py aws ecr --profile myprofile --accounts-file accounts.txt --output-format json
+AWS-specific flags:
+```
+-profile         AWS profile to use
+-aws-account     Target AWS account ID
+-accounts-file   File containing list of AWS account IDs
 ```
 
-### GCP Examples
-
-1. Enumerate all resource types:
-
+Example commands:
 ```bash
-python3 enumPublicCloud.py gcp --project-id my-project --resource-types all
+# List public AMIs in your account
+go run enumPublicCloud.go -platform aws -profile myprofile ami
+
+# List public EBS snapshots in specific account
+go run enumPublicCloud.go -platform aws -profile myprofile -aws-account 123456789012 ebs
+
+# List public ECR repositories from multiple accounts
+go run enumPublicCloud.go -platform aws -profile myprofile -accounts-file accounts.txt ecr
+
+# List all public resources in an account
+go run enumPublicCloud.go -platform aws -profile myprofile -aws-account 123456789012 all
 ```
 
-2. Check only storage and compute resources:
+Supported AWS resource types:
+- `ami`: Amazon Machine Images
+- `ebs`: EBS snapshots
+- `ecr`: Elastic Container Registry repositories
+- `s3`: S3 buckets
+- `ec2`: EC2 instances
+- `all`: All resource types
 
-```bash
-python3 enumPublicCloud.py gcp --project-id my-project --resource-types storage compute --output-format csv
+### GCP Usage
+
+GCP-specific flags:
+```
+-target-project   Target GCP project ID
 ```
 
-### Azure Examples
-
-1. Enumerate all Azure resources:
-
+Example commands:
 ```bash
-python3 enumPublicCloud.py azure --subscription-id "your-sub-id" --resource-types all
+# Enumerate public storage buckets
+go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID storage
+
+# Enumerate public compute resources
+go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID compute
+
+# Enumerate public BigQuery datasets
+go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID bigquery
+
+# Enumerate all public resources
+go run enumPublicCloud.go -platform gcp -target-project TARGET_PROJECT_ID all
 ```
 
-2. Check only storage and container resources:
+Supported GCP resource types:
+- `storage`: Cloud Storage buckets
+- `compute`: Compute Engine snapshots and images
+- `bigquery`: BigQuery datasets
+- `iam`: IAM policies
+- `run`: Cloud Run services
+- `functions`: Cloud Functions
+- `artifacts`: Artifact Registry repositories
+- `secrets`: Secret Manager secrets
+- `sql`: Cloud SQL instances
+- `firestore`: Firestore collections
+- `pubsub`: Pub/Sub topics
+- `vpc`: VPC firewall rules
+- `build`: Cloud Build artifacts
+- `gke`: GKE clusters
+- `all`: All resource types
 
-```bash
-python3 enumPublicCloud.py azure --subscription-id "your-sub-id" --resource-types storage acr
+### Azure Usage (Coming Soon)
+
+Azure-specific flags:
+```
+-subscription    Azure subscription ID
 ```
 
-## Use Cases
+Example commands (preview):
+```bash
+# List public storage accounts
+go run enumPublicCloud.go -platform azure -subscription SUB_ID storage
 
-1. **Security Auditing**
-   - Identify publicly accessible resources across cloud providers
-   - Generate reports for compliance requirements
-   - Regular security posture assessments
+# List public VMs
+go run enumPublicCloud.go -platform azure -subscription SUB_ID vm
 
-2. **Resource Management**
-   - Track resource usage across multiple cloud platforms
-   - Identify unused or misconfigured resources
-   - Generate inventory reports
+# List all public resources
+go run enumPublicCloud.go -platform azure -subscription SUB_ID all
+```
 
-3. **Cost Optimization**
-   - Identify potentially unnecessary public resources
-   - Track resource distribution across regions
-   - Monitor resource types and configurations
+Planned Azure resource types:
+- `storage`: Storage accounts
+- `vm`: Virtual machines
+- `acr`: Container registries
+- `aks`: Kubernetes services
+- `all`: All resource types
 
-## Output Examples
+## Output Formats
 
-### Text Format
-```text
-STORAGE_BUCKETS:
-=================
-name: example-bucket
-location: us-east1
-storage_class: STANDARD
+### Text (default)
+```
+Platform: aws
+Total Resources: 1
+
+Type: s3-bucket
+Name: my-public-bucket
+ID: my-public-bucket
+Location: us-east-1
+Created: 2024-02-22T10:00:00Z
+Properties:
+  public_access: true
+  versioning_enabled: true
+Tags:
+  Environment: Production
 ----------------------------------------
 ```
 
-### JSON Format
+### JSON
 ```json
 {
-  "storage_buckets": [
+  "platform": "aws",
+  "resources": [
     {
-      "name": "example-bucket",
-      "location": "us-east1",
-      "storage_class": "STANDARD"
+      "type": "s3-bucket",
+      "name": "my-public-bucket",
+      "id": "my-public-bucket",
+      "location": "us-east-1",
+      "created_at": "2024-02-22T10:00:00Z",
+      "properties": {
+        "public_access": true,
+        "versioning_enabled": true
+      },
+      "tags": {
+        "Environment": "Production"
+      }
     }
   ]
 }
 ```
 
-## Contributing
+### CSV
+```csv
+Type,Name,ID,Location,Properties,Tags,CreatedAt
+s3-bucket,my-public-bucket,my-public-bucket,us-east-1,"{""public_access"":true}","{""Environment"":""Production""}","2024-02-22T10:00:00Z"
+```
 
-Contributions are welcome! Please feel free to submit pull requests or create issues for bugs and feature requests.
+## Error Handling
+
+The tool provides clear error messages for common issues:
+
+1. API/Service Errors:
+```
+Skipped APIs (not enabled):
+- Compute Engine API is not enabled. Visit the Google Cloud Console to enable it.
+```
+
+2. Permission Errors:
+```
+Skipped Resources (insufficient permissions):
+- Insufficient permissions to access Cloud Storage. Ensure necessary IAM roles.
+```
+
+3. Configuration Errors:
+```
+Error: AWS credentials not found. Configure AWS CLI or provide credentials.
+Error: Target project ID required. Use -target-project flag.
+```
 
 ## License
 
