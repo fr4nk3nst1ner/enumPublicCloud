@@ -1,5 +1,5 @@
 # Use the official Go image as a builder
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -13,8 +13,8 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/CloudSnitch
+# Build the application using cloudSnitch.go as the entry point
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/cloudsnitch ./cloudSnitch.go
 
 # Use a minimal alpine image for the final container
 FROM alpine:latest
@@ -22,10 +22,14 @@ FROM alpine:latest
 # Install ca-certificates for HTTPS requests
 RUN apk --no-cache add ca-certificates
 
+# Set working directory in the final container
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app/CloudSnitch .
+# Copy the binary from the builder stage
+COPY --from=builder /app/cloudsnitch .
+
+# Ensure the binary has execute permissions
+RUN chmod +x /app/cloudsnitch
 
 # Set the entrypoint
-ENTRYPOINT ["/app/CloudSnitch"] 
+ENTRYPOINT ["/app/cloudsnitch"]

@@ -1,0 +1,27 @@
+project_name: cloudsnitch
+
+builds:
+  - id: cloudsnitch
+    main: ./cloudSnitch.go
+    binary: cloudsnitch
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: fr4nk3nst1ner
+    name: cloudsnitch
