@@ -3,7 +3,7 @@ google-cloud-storage
 google-cloud-compute
 google-cloud-container
 google-cloud-artifact-registry
-azure-identity==1.13.0
+azure-identity==1.16.1
 azure-storage-blob==12.17.0
 azure-mgmt-resource==22.0.0
 azure-mgmt-storage==21.2.0
