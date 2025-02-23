@@ -205,14 +205,14 @@ func Main() {
 	
 	// Create base config
 	config := cloud.Config{
-		Platform:           *platform,
-		Profile:           *profile,
-		GCPProjectID:      *gcpProjectID,
-		GCPAccount:        *account,  // Add GCP account email
-		SubscriptionID:    *azureSubscriptionID,
-		OutputFormat:      *outputFormat,
-		OutputFile:        *outputFile,
-		ResourceTypes:     []string{resourceType},
+		Platform:        *platform,
+		Profile:         *profile,
+		SourceProject:   *gcpProjectID,
+		TargetProject:   *gcpProjectID,  // Initially set to same as source
+		SubscriptionID:  *azureSubscriptionID,
+		OutputFormat:    *outputFormat,
+		OutputFile:      *outputFile,
+		ResourceTypes:   []string{resourceType},
 	}
 
 	switch strings.ToLower(*platform) {
