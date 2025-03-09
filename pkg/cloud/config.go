@@ -6,14 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 )
-
-// LogConfig holds logging configuration
-type LogConfig struct {
-	Level    string
-	FilePath string
-}
 
 // Config holds the configuration for cloud enumeration
 type Config struct {
@@ -26,6 +19,7 @@ type Config struct {
 	ResourceTypes   []string
 	SourceProject   string   // Source GCP project ID
 	TargetProject   string   // Target GCP project ID
+	Domain          string   // Domain name for Azure tenant enumeration
 }
 
 // Resource represents a generic cloud resource
@@ -36,22 +30,22 @@ type Resource struct {
 	Location   string                 `json:"location"`
 	Properties map[string]interface{} `json:"properties"`
 	Tags       map[string]string      `json:"tags,omitempty"`
-	CreatedAt  time.Time             `json:"created_at"`
+	CreatedAt  string                 `json:"created_at"`
 }
 
-// Results holds enumeration results for all resource types
-type Results struct {
+// EnumerationResults holds enumeration results for all resource types
+type EnumerationResults struct {
 	Platform  string     `json:"platform"`
 	Resources []Resource `json:"resources"`
 }
 
 // Enumerator interface defines methods that must be implemented by cloud-specific enumerators
 type Enumerator interface {
-	Enumerate() (*Results, error)
+	Enumerate() (*EnumerationResults, error)
 }
 
 // WriteOutput writes the results to the specified output format and destination
-func WriteOutput(results *Results, config Config) error {
+func WriteOutput(results *EnumerationResults, config Config) error {
 	if results == nil {
 		return fmt.Errorf("no results to write")
 	}
@@ -73,7 +67,7 @@ func WriteOutput(results *Results, config Config) error {
 	return err
 }
 
-func writeJSON(results *Results, filepath string) error {
+func writeJSON(results *EnumerationResults, filepath string) error {
 	data, err := json.MarshalIndent(results, "", "    ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal results to JSON: %v", err)
@@ -87,7 +81,7 @@ func writeJSON(results *Results, filepath string) error {
 	return os.WriteFile(filepath, data, 0644)
 }
 
-func writeCSV(results *Results, filepath string) error {
+func writeCSV(results *EnumerationResults, filepath string) error {
 	headers := []string{"Type", "Name", "ID", "Location", "Properties", "Tags", "CreatedAt"}
 	
 	var writer *csv.Writer
@@ -117,7 +111,7 @@ func writeCSV(results *Results, filepath string) error {
 			resource.Location,
 			string(propertiesJSON),
 			string(tagsJSON),
-			resource.CreatedAt.Format(time.RFC3339),
+			resource.CreatedAt,
 		}
 		
 		if err := writer.Write(record); err != nil {
@@ -129,7 +123,7 @@ func writeCSV(results *Results, filepath string) error {
 	return writer.Error()
 }
 
-func writeText(results *Results, filepath string) error {
+func writeText(results *EnumerationResults, filepath string) error {
 	var output string
 	output += fmt.Sprintf("Platform: %s\n", results.Platform)
 	output += fmt.Sprintf("Total Resources: %d\n\n", len(results.Resources))
@@ -139,7 +133,7 @@ func writeText(results *Results, filepath string) error {
 		output += fmt.Sprintf("Name: %s\n", resource.Name)
 		output += fmt.Sprintf("ID: %s\n", resource.ID)
 		output += fmt.Sprintf("Location: %s\n", resource.Location)
-		output += fmt.Sprintf("Created: %s\n", resource.CreatedAt.Format(time.RFC3339))
+		output += fmt.Sprintf("Created: %s\n", resource.CreatedAt)
 		
 		if len(resource.Properties) > 0 {
 			output += "Properties:\n"

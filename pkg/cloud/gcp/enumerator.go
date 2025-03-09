@@ -103,10 +103,16 @@ func getUserFriendlyError(err error, service string) string {
 	return err.Error()
 }
 
-func (e *Enumerator) Enumerate() (*cloud.Results, error) {
-	results := &cloud.Results{
+// Convert time.Time to string in RFC3339 format
+func formatTime(t time.Time) string {
+	return t.Format(time.RFC3339)
+}
+
+// Enumerate implements the cloud.Enumerator interface
+func (e *Enumerator) Enumerate() (*cloud.EnumerationResults, error) {
+	results := &cloud.EnumerationResults{
 		Platform:  "gcp",
-		Resources: make([]cloud.Resource, 0),
+		Resources: []cloud.Resource{},
 	}
 
 	// Initialize services with default credentials and project
@@ -316,7 +322,7 @@ func (e *Enumerator) isAccessibleFromTargetProject(resourceType, resourceName st
 	return false
 }
 
-func (e *Enumerator) enumerateStorageBuckets(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateStorageBuckets(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Storage buckets...")
 
 	// Create service with source project credentials
@@ -390,7 +396,7 @@ func (e *Enumerator) enumerateStorageBuckets(results *cloud.Results, opts []opti
 			Name:      bucket.Name,
 			ID:        bucket.Id,
 			Location:  bucket.Location,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Tags:      tags,
 			Properties: map[string]interface{}{
 				"storage_class": bucket.StorageClass,
@@ -406,7 +412,7 @@ func (e *Enumerator) enumerateStorageBuckets(results *cloud.Results, opts []opti
 	return nil
 }
 
-func (e *Enumerator) enumerateComputeSnapshots(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateComputeSnapshots(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating public Compute Engine snapshots...")
 
 	service, err := compute.NewService(e.ctx, opts...)
@@ -448,7 +454,7 @@ func (e *Enumerator) enumerateComputeSnapshots(results *cloud.Results, opts []op
 			Name:      snapshot.Name,
 			ID:        fmt.Sprintf("%d", snapshot.Id),
 			Location:  snapshot.StorageLocations[0],
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"disk_size_gb":    snapshot.DiskSizeGb,
 				"storage_bytes":   snapshot.StorageBytes,
@@ -463,7 +469,7 @@ func (e *Enumerator) enumerateComputeSnapshots(results *cloud.Results, opts []op
 	return nil
 }
 
-func (e *Enumerator) enumerateComputeImages(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateComputeImages(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating public Compute Engine images...")
 
 	service, err := compute.NewService(e.ctx, opts...)
@@ -505,7 +511,7 @@ func (e *Enumerator) enumerateComputeImages(results *cloud.Results, opts []optio
 			Name:      image.Name,
 			ID:        fmt.Sprintf("%d", image.Id),
 			Location:  "global",
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"disk_size_gb":  image.DiskSizeGb,
 				"source_disk":   image.SourceDisk,
@@ -521,7 +527,7 @@ func (e *Enumerator) enumerateComputeImages(results *cloud.Results, opts []optio
 	return nil
 }
 
-func (e *Enumerator) enumerateBigQueryDatasets(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateBigQueryDatasets(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating public BigQuery datasets...")
 
 	service, err := bigquery.NewService(e.ctx, opts...)
@@ -562,7 +568,7 @@ func (e *Enumerator) enumerateBigQueryDatasets(results *cloud.Results, opts []op
 			Name:      datasetDetail.DatasetReference.DatasetId,
 			ID:        datasetDetail.Id,
 			Location:  datasetDetail.Location,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"access_controls": datasetDetail.Access,
 				"default_partition_expiration_ms": datasetDetail.DefaultPartitionExpirationMs,
@@ -576,7 +582,7 @@ func (e *Enumerator) enumerateBigQueryDatasets(results *cloud.Results, opts []op
 	return nil
 }
 
-func (e *Enumerator) enumerateIAMPolicies(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateIAMPolicies(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating IAM policies...")
 
 	service, err := cloudresourcemanager.NewService(e.ctx, opts...)
@@ -607,7 +613,7 @@ func (e *Enumerator) enumerateIAMPolicies(results *cloud.Results, opts []option.
 			Name:      binding.Role,
 			ID:        binding.Role,
 			Location:  "global",
-			CreatedAt: time.Now(),
+			CreatedAt: formatTime(time.Now()),
 			Properties: map[string]interface{}{
 				"role":    binding.Role,
 				"members": binding.Members,
@@ -620,7 +626,7 @@ func (e *Enumerator) enumerateIAMPolicies(results *cloud.Results, opts []option.
 	return nil
 }
 
-func (e *Enumerator) enumerateCloudRunServices(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateCloudRunServices(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Cloud Run services...")
 
 	service, err := run.NewService(e.ctx, opts...)
@@ -644,7 +650,7 @@ func (e *Enumerator) enumerateCloudRunServices(results *cloud.Results, opts []op
 				Name:      svc.Metadata.Name,
 				ID:        svc.Metadata.Name,
 				Location:  svc.Metadata.Namespace,
-				CreatedAt: createdAt,
+				CreatedAt: formatTime(createdAt),
 				Properties: map[string]interface{}{
 					"url":    svc.Status.Url,
 					"status": svc.Status.Conditions,
@@ -658,7 +664,7 @@ func (e *Enumerator) enumerateCloudRunServices(results *cloud.Results, opts []op
 	return nil
 }
 
-func (e *Enumerator) enumerateCloudFunctions(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateCloudFunctions(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Cloud Functions...")
 
 	service, err := cloudfunctions.NewService(e.ctx, opts...)
@@ -689,7 +695,7 @@ func (e *Enumerator) enumerateCloudFunctions(results *cloud.Results, opts []opti
 				Name:      function.Name,
 				ID:        function.Name,
 				Location:  location,
-				CreatedAt: createdAt,
+				CreatedAt: formatTime(createdAt),
 				Properties: map[string]interface{}{
 					"url":         function.HttpsTrigger.Url,
 					"status":      function.Status,
@@ -705,7 +711,7 @@ func (e *Enumerator) enumerateCloudFunctions(results *cloud.Results, opts []opti
 	return nil
 }
 
-func (e *Enumerator) enumerateArtifactRegistry(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateArtifactRegistry(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Artifact Registry repositories...")
 
 	service, err := artifactregistry.NewService(e.ctx, opts...)
@@ -739,7 +745,7 @@ func (e *Enumerator) enumerateArtifactRegistry(results *cloud.Results, opts []op
 			Name:      repo.Name,
 			ID:        repo.Name,
 			Location:  location,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Tags:      tags,
 			Properties: map[string]interface{}{
 				"format":      repo.Format,
@@ -754,7 +760,7 @@ func (e *Enumerator) enumerateArtifactRegistry(results *cloud.Results, opts []op
 	return nil
 }
 
-func (e *Enumerator) enumerateSecrets(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateSecrets(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Secret Manager secrets...")
 
 	service, err := secretmanager.NewService(e.ctx, opts...)
@@ -796,7 +802,7 @@ func (e *Enumerator) enumerateSecrets(results *cloud.Results, opts []option.Clie
 			Type:      "secret-manager-secret",
 			Name:      secret.Name,
 			ID:        secret.Name,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"replication": secret.Replication,
 				"policy":      policy.Bindings,
@@ -809,7 +815,7 @@ func (e *Enumerator) enumerateSecrets(results *cloud.Results, opts []option.Clie
 	return nil
 }
 
-func (e *Enumerator) enumerateCloudSQL(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateCloudSQL(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Cloud SQL instances...")
 
 	service, err := sqladmin.NewService(e.ctx, opts...)
@@ -829,7 +835,7 @@ func (e *Enumerator) enumerateCloudSQL(results *cloud.Results, opts []option.Cli
 			Type:      "cloud-sql-instance",
 			Name:      instance.Name,
 			ID:        instance.InstanceType,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"state":        instance.State,
 				"tier":        instance.Settings.Tier,
@@ -844,7 +850,7 @@ func (e *Enumerator) enumerateCloudSQL(results *cloud.Results, opts []option.Cli
 	return nil
 }
 
-func (e *Enumerator) enumerateFirestore(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateFirestore(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Firestore collections...")
 
 	service, err := firestore.NewService(e.ctx, opts...)
@@ -928,7 +934,7 @@ func (e *Enumerator) enumerateFirestore(results *cloud.Results, opts []option.Cl
 			Name:      doc.Name,
 			ID:        doc.Name,
 			Location:  "global",
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"fields":        doc.Fields,
 				"project_policy": projectPolicy.Bindings,
@@ -941,7 +947,7 @@ func (e *Enumerator) enumerateFirestore(results *cloud.Results, opts []option.Cl
 	return nil
 }
 
-func (e *Enumerator) enumeratePubSub(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumeratePubSub(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Pub/Sub topics...")
 
 	service, err := pubsub.NewService(e.ctx, opts...)
@@ -982,7 +988,7 @@ func (e *Enumerator) enumeratePubSub(results *cloud.Results, opts []option.Clien
 			Name:      topic.Name,
 			ID:        topic.Name,
 			Location:  "global",
-			CreatedAt: time.Now(), // PubSub API doesn't provide creation time
+			CreatedAt: formatTime(time.Now()), // PubSub API doesn't provide creation time
 			Properties: map[string]interface{}{
 				"policy": policy.Bindings,
 			},
@@ -994,7 +1000,7 @@ func (e *Enumerator) enumeratePubSub(results *cloud.Results, opts []option.Clien
 	return nil
 }
 
-func (e *Enumerator) enumerateVPCFirewallRules(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateVPCFirewallRules(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating VPC firewall rules...")
 
 	service, err := compute.NewService(e.ctx, opts...)
@@ -1029,7 +1035,7 @@ func (e *Enumerator) enumerateVPCFirewallRules(results *cloud.Results, opts []op
 			Type:      "vpc-firewall-rule",
 			Name:      rule.Name,
 			ID:        fmt.Sprintf("%d", rule.Id),
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"direction":     rule.Direction,
 				"priority":     rule.Priority,
@@ -1045,7 +1051,7 @@ func (e *Enumerator) enumerateVPCFirewallRules(results *cloud.Results, opts []op
 	return nil
 }
 
-func (e *Enumerator) enumerateCloudBuild(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateCloudBuild(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating Cloud Build artifacts...")
 
 	service, err := cloudbuild.NewService(e.ctx, opts...)
@@ -1065,7 +1071,7 @@ func (e *Enumerator) enumerateCloudBuild(results *cloud.Results, opts []option.C
 			Type:      "cloud-build-build",
 			Name:      build.Name,
 			ID:        fmt.Sprintf("%d", build.Id),
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Properties: map[string]interface{}{
 				"status": build.Status,
 			},
@@ -1077,7 +1083,7 @@ func (e *Enumerator) enumerateCloudBuild(results *cloud.Results, opts []option.C
 	return nil
 }
 
-func (e *Enumerator) enumerateGKEClusters(results *cloud.Results, opts []option.ClientOption) error {
+func (e *Enumerator) enumerateGKEClusters(results *cloud.EnumerationResults, opts []option.ClientOption) error {
 	cloud.InfoLogger.Println("Enumerating GKE clusters...")
 
 	service, err := container.NewService(e.ctx, opts...)
@@ -1104,7 +1110,7 @@ func (e *Enumerator) enumerateGKEClusters(results *cloud.Results, opts []option.
 			Name:      cluster.Name,
 			ID:        cluster.SelfLink,
 			Location:  cluster.Location,
-			CreatedAt: createdAt,
+			CreatedAt: formatTime(createdAt),
 			Tags:      tags,
 			Properties: map[string]interface{}{
 				"status":           cluster.Status,
